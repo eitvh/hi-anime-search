@@ -1,40 +1,45 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../../app/store'
-import { searchAnime, type SearchResponse } from '../../api/jikan'
+import type { Anime, SearchResponse } from '../../api/jikan' // <-- use your canonical types
 
-type Status = 'idle' | 'loading' | 'succeeded' | 'failed'
-
-export const fetchSearch = createAsyncThunk<
-  SearchResponse,
-  { q: string; page: number }
->(
-  'search/fetch',
-  async ({ q, page }, thunkAPI) => {
-    // RTK wires abort -> thunkAPI.signal
-    return await searchAnime(q, page, thunkAPI.signal)
-  }
-)
-
-type SearchState = {
+export type SearchState = {
   q: string
   page: number
-  status: Status
-  error?: string
-  items: SearchResponse['data']
+  items: Anime[]
   totalPages: number
-  hasNext: boolean
-  lastRequestId?: string
+  status: 'idle' | 'loading' | 'succeeded' | 'failed'
+  error?: string
 }
 
 const initialState: SearchState = {
   q: '',
   page: 1,
-  status: 'idle',
   items: [],
   totalPages: 1,
-  hasNext: false,
+  status: 'idle',
 }
+
+/** Abortable search thunk (uses thunkAPI.signal) */
+export const fetchSearch = createAsyncThunk<
+  SearchResponse,
+  { q: string; page: number }
+>(
+  'search/fetchSearch',
+  async ({ q, page }, thunkAPI) => {
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    params.set('page', String(page))
+
+    const res = await fetch(`https://api.jikan.moe/v4/anime?${params.toString()}`, {
+      signal: thunkAPI.signal,
+    })
+    if (!res.ok) throw new Error(String(res.status))
+
+    const json = (await res.json()) as SearchResponse
+    return json
+  }
+)
 
 const searchSlice = createSlice({
   name: 'search',
@@ -42,39 +47,38 @@ const searchSlice = createSlice({
   reducers: {
     setQuery(state, action: PayloadAction<string>) {
       state.q = action.payload
-      state.page = 1 // reset page when query changes
+      state.page = 1
     },
     setPage(state, action: PayloadAction<number>) {
       state.page = action.payload
     },
-    reset(state) {
-      Object.assign(state, initialState)
-    }
+    reset() {
+      return initialState
+    },
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchSearch.pending, (state, action) => {
+      .addCase(fetchSearch.pending, (state) => {
         state.status = 'loading'
         state.error = undefined
-        state.lastRequestId = action.meta.requestId
       })
       .addCase(fetchSearch.fulfilled, (state, action) => {
-        if (state.lastRequestId !== action.meta.requestId) return
         state.status = 'succeeded'
-        state.items = action.payload.data
-        const p = action.payload.pagination
-        state.totalPages = p.last_visible_page ?? 1
-        state.hasNext = !!p.has_next_page
+        state.items = action.payload.data ?? []
+        state.totalPages = Math.max(
+          1,
+          action.payload.pagination?.last_visible_page ?? 1
+        )
       })
       .addCase(fetchSearch.rejected, (state, action) => {
-        if (action.error.name === 'AbortError') return // ignore aborted
         state.status = 'failed'
-        state.error = action.error.message || 'Unknown error'
+        state.error =
+          (action.error?.message && `Search failed: ${action.error.message}`) ||
+          'Search failed'
       })
-  }
+  },
 })
 
 export const { setQuery, setPage, reset } = searchSlice.actions
+export const selectSearch = (state: RootState) => state.search
 export default searchSlice.reducer
-
-export const selectSearch = (s: RootState) => s.search
