@@ -5,7 +5,7 @@ import type { AppDispatch } from '../app/store'
 import { Input } from '../components/ui/input'
 import { X as XIcon } from 'lucide-react'
 
-/** Promise shape we can call .abort() on (RTK thunks support this) */
+/** can call .abort() on (RTK thunks support this) */
 type AbortablePromise = Promise<any> & { abort?: () => void }
 
 const DEBOUNCE_MS = 250

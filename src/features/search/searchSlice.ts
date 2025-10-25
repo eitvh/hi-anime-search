@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../../app/store'
-import type { Anime, SearchResponse } from '../../api/jikan' // <-- use your canonical types
+import type { Anime, SearchResponse } from '../../api/jikan'
 
 export type SearchState = {
   q: string
