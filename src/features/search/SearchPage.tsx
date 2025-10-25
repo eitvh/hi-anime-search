@@ -97,7 +97,7 @@ export default function SearchPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button asChild variant="outline" className="rounded-xl text-xs" title="GitHub">
-              <a href="https://github.com/eitvh" target="_blank" rel="noreferrer">GitHub</a>
+              <a href="https://github.com/eitvh/hi-anime-search" target="_blank" rel="noreferrer">GitHub Repository</a>
             </Button>
             <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
               <Avatar className="h-6 w-6"><AvatarFallback>EV</AvatarFallback></Avatar>
