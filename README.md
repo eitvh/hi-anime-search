@@ -3,8 +3,8 @@
 A modern anime search built with **React + TypeScript + Redux + Vite** and **shadcn/ui (Neutral theme)**.
 Search anime, paginate results, and explore details including characters, reviews, streaming links, and recommendations.
 
-**Live URL:** *<add your deployment link here>*
-**Repository:** *<add your GitHub repo link here>*
+**Live URL:** *https://hi-anime-search.vercel.app/*
+**Repository:** *https://github.com/eitvh/hi-anime-search*
 
 ---
 
